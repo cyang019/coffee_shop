@@ -3,11 +3,15 @@ from flask import request, _request_ctx_stack, abort
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
+from dotenv import load_dotenv
+load_dotenv()
 
+import os
 
-AUTH0_DOMAIN = 'cyang019.us.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'coffee_shop'
+AUTH0_DOMAIN = os.environ.get('autho-domain')
+ALGORITHMS = os.environ.get('algorithms')
+API_AUDIENCE = os.environ.get('api-audience')
+
 
 ## AuthError Exception
 '''
