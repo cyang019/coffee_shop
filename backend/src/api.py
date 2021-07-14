@@ -17,7 +17,7 @@ CORS(app)
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
 '''
@@ -29,10 +29,10 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['GET'])
-@requires_auth('get:drinks-detail')
-def retrieve_drinks(payload):
+def retrieve_drinks():
     try:
         drinks = Drink.query.all()
+        print("drinks: ", drinks)
         drinks_short = [drink.short() for drink in drinks]
     except Exception as e:
         print('error retrieving drinks.')
@@ -40,7 +40,7 @@ def retrieve_drinks(payload):
         abort(422)
     return jsonify({
         "success": True,
-        "drinks": json.dumps(drinks_short)
+        "drinks": drinks_short
     })
 
 '''
@@ -63,7 +63,7 @@ def retrieve_drinks_detail(payload):
         abort(422)
     return jsonify({
         "success": True,
-        "drinks": json.dumps(drinks_long)
+        "drinks": drinks_long
     })
 
 
@@ -120,8 +120,11 @@ def edit_drink(payload, drink_id):
         if drink is None:
             abort(404)
         body = request.get_json()
-        drink.title = body.get('title', None)
-        drink.recipe = body.get('recipe', None)
+        title = body.get('title', 'default')
+        recipe = body.get('recipe', '')
+        drink.title = title
+        drink.recipe = recipe
+        drink_rep = drink.long()
         db.session.commit()
     except Exception as e:
         print('error patching existing drink.')
@@ -131,7 +134,7 @@ def edit_drink(payload, drink_id):
         db.session.close()
     return jsonify({
         'success': True,
-        'drinks': drink.long()
+        'drinks': [drink_rep]
     })
 
 '''
@@ -197,7 +200,7 @@ def unprocessable(error):
     error handler should conform to general task above
 '''
 @app.errorhandler(404)
-def unprocessable(error):
+def resource_not_found(error):
     return jsonify({
         "success": False,
         "error": 404,
@@ -209,7 +212,7 @@ def unprocessable(error):
     error handler should conform to general task above
 '''
 @app.errorhandler(400)
-def unprocessable(error):
+def bad_request_error(error):
     return jsonify({
         "success": False,
         "error": 400,
@@ -217,15 +220,15 @@ def unprocessable(error):
     }), 400
 
 @app.errorhandler(401)
-def unprocessable(error):
+def unauthorized_client_error(error):
     return jsonify({
         "success": False,
         "error": 401,
-        "message": "Token not found."
+        "message": "Unauthorized client error."
     }), 401
 
-@app.errorhandler(404)
-def unprocessable(error):
+@app.errorhandler(403)
+def forbidden_error(error):
     return jsonify({
         "success": False,
         "error": 403,

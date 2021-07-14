@@ -75,10 +75,10 @@ def get_token_auth_header():
 '''
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
-        abort(400)
+        abort(401)
     print('payload["permissions"]:', payload['permissions'])
     if permission not in payload['permissions']:
-        abort(403)
+        abort(401)
     return True
 
 '''
@@ -161,9 +161,18 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
-            check_permissions(permission, payload)
+            try:
+                token = get_token_auth_header()
+                payload = verify_decode_jwt(token)
+                check_permissions(permission, payload)
+            except AuthError as e:
+                print('auth error...')
+                print(e)
+                abort(401)
+            except Exception as e:
+                print(f'exception type: {type(e).__name__}')
+                abort(401)
+            
             return f(payload, *args, **kwargs)
 
         return wrapper

@@ -1,6 +1,7 @@
 import os
 from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
+import ast
 import json
 
 database_filename = "database.db"
@@ -64,7 +65,9 @@ class Drink(db.Model):
     '''
 
     def short(self):
-        short_recipe = [{"color": r["color"], "parts": r["parts"]} for r in json.loads(self.recipe)]
+        short_recipe = []
+        for r in ast.literal_eval(self.recipe):
+            short_recipe.append({"color": r["color"], "parts": r["parts"]})
         return {
             "id": self.id,
             "title": self.title,
@@ -80,7 +83,7 @@ class Drink(db.Model):
         return {
             "id": self.id,
             "title": self.title,
-            "recipe": json.loads(self.recipe)
+            "recipe": self.recipe
         }
 
     '''
